@@ -25,7 +25,7 @@ func main() {
 	// create new server mux and register the handlers
 	sm := http.NewServeMux()
 	// sm.Handle("/", hh)
-	sm.Handle("/products", ph)
+	sm.Handle("/", ph)
 
 	// we need to configure timeouts in the server. security against denial of service attack where client start the request and just wait. if multiple client does that then the servers resources will ultimately full and no futher request are gonna be processed
 	s := &http.Server{

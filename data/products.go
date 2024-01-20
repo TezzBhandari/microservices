@@ -1,4 +1,4 @@
-package products
+package data
 
 import (
 	"encoding/json"
@@ -26,6 +26,11 @@ func (products *Products) ToJSON(rw io.Writer) error {
 	return e.Encode(products)
 }
 
+func (product *Product) FromJSON(r io.Reader) error {
+	d := json.NewDecoder(r)
+	return d.Decode(product)
+}
+
 var productList = Products{
 	{
 		ID:          1,
@@ -47,6 +52,39 @@ var productList = Products{
 	},
 }
 
+func AddProduct(product *Product) {
+	newId := getNextId()
+	product.ID = newId
+	productList = append(productList, product)
+}
+
+func getNextId() int {
+	return len(productList) + 1
+}
+
 func GetProducts() Products {
 	return productList
+}
+
+func UpdateProduct(id int, update *Product) error {
+	product, pos, err := findProductById(id)
+	if err != nil {
+		return err
+	}
+
+	prevId := product.ID
+	productList[pos] = update
+	productList[pos].ID = prevId
+	return nil
+}
+
+var ErrorProductNotFound = fmt.Errorf("product not found")
+
+func findProductById(id int) (*Product, int, error) {
+	for index, product := range productList {
+		if product.ID == id {
+			return product, index, nil
+		}
+	}
+	return nil, -1, ErrorProductNotFound
 }
