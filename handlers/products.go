@@ -29,6 +29,40 @@ func (ph *Products) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.Method == http.MethodDelete {
+		ph.logger.Println("handling delete request")
+		// expect an id in the url path
+		// regex expression.
+		// used to get id from the url path
+		reg := regexp.MustCompile("/([0-9]+)")
+		g := reg.FindAllStringSubmatch(r.URL.Path, -1)
+		// ph.updateProduct(rw, r)
+		ph.logger.Println(g[0])
+
+		ph.logger.Println(len(g[0]))
+		if len(g) != 1 {
+			http.Error(rw, "invalid url path", http.StatusBadRequest)
+			return
+		}
+
+		if len(g[0]) != 2 {
+			http.Error(rw, "invalid url path", http.StatusBadRequest)
+			return
+		}
+
+		idString := g[0][1]
+		// converting idstring into integer
+		id, err := strconv.Atoi(idString)
+		if err != nil {
+			http.Error(rw, "invalid id", http.StatusBadRequest)
+			return
+		}
+
+		// update the product with corresponding id
+		ph.deleteProduct(id, rw, r)
+		return
+	}
+
 	if r.Method == http.MethodPut {
 		ph.logger.Println("handling PUT reqeust")
 		// expect an id in the url path
@@ -51,7 +85,7 @@ func (ph *Products) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		}
 
 		idString := g[0][1]
-		// converting idstring into into
+		// converting idstring into integer
 		id, err := strconv.Atoi(idString)
 		if err != nil {
 			http.Error(rw, "invalid id", http.StatusBadRequest)
@@ -141,4 +175,22 @@ func (ph *Products) updateProduct(id int, rw http.ResponseWriter, r *http.Reques
 	rw.Header().Add("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	fmt.Fprintf(rw, "successfully updated product")
+}
+
+func (ph *Products) deleteProduct(id int, rw http.ResponseWriter, r *http.Request) {
+
+	err := data.DeleteProduct(id)
+
+	if err == data.ErrorProductNotFound {
+		http.Error(rw, "product not found", http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		http.Error(rw, "failed to delete product", http.StatusInternalServerError)
+		return
+	}
+	rw.Header().Add("Content-Type", "text/plain")
+	rw.WriteHeader(http.StatusOK)
+	fmt.Fprintf(rw, "successfully deleted product")
 }

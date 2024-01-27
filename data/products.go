@@ -78,6 +78,16 @@ func UpdateProduct(id int, update *Product) error {
 	return nil
 }
 
+func DeleteProduct(id int) error {
+	_, pos, err := findProductById(id)
+	if err != nil {
+		return err
+	}
+
+	productList = append(productList[:pos], productList[pos+1:]...)
+	return nil
+}
+
 var ErrorProductNotFound = fmt.Errorf("product not found")
 
 func findProductById(id int) (*Product, int, error) {
